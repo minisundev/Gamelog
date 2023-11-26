@@ -1,6 +1,9 @@
 package com.best11.gamelog.user.controller;
 
 import com.best11.gamelog.CommonResponseDto;
+import com.best11.gamelog.user.dto.PasswordRequestDto;
+import com.best11.gamelog.user.dto.SignupRequestDto;
+import com.best11.gamelog.user.dto.UserRequestDto;
 import com.best11.gamelog.feed.dto.PostResponseDto;
 import com.best11.gamelog.feed.dto.PostUpdateRequestDto;
 import com.best11.gamelog.user.dto.*;
@@ -65,7 +68,34 @@ public class UserController {
 
         jwtUtil.addJwtToCookie(jwtUtil.createToken(loginRequestDto.getUserId()), response);
 
+
         return ResponseEntity.ok().body(new CommonResponseDto("로그인 성공", HttpStatus.OK.value()));
+    }
+
+    // 이름 변경
+    @PatchMapping("/username")
+    public ResponseEntity<CommonResponseDto> updateUsername(@RequestBody UserRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        userService.updateUsername(requestDto, userDetails.getUser());
+
+        return ResponseEntity.status(HttpStatus.OK.value()).body(new CommonResponseDto("이름 변경이 완료되었습니다.", HttpStatus.OK.value()));
+    }
+
+    // 한 줄 소개 변경
+    @PatchMapping("/description")
+    public ResponseEntity<CommonResponseDto> updateDescription(@RequestBody UserRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        userService.updateDescription(requestDto, userDetails.getUser());
+
+        return ResponseEntity.status(HttpStatus.OK.value()).body(new CommonResponseDto("한 줄 소개 변경이 완료되었습니다.", HttpStatus.OK.value()));
+    }
+
+    // 비밀번호 변경
+    @PatchMapping("/password")
+    public ResponseEntity<CommonResponseDto> updatePassword(@RequestBody PasswordRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        userService.updatePassword(requestDto, userDetails.getUser());
+
+        return ResponseEntity.status(HttpStatus.OK.value()).body(new CommonResponseDto("비밀번호 변경이 완료되었습니다.", HttpStatus.OK.value()));
     }
 
     @GetMapping("/profile")

@@ -7,6 +7,7 @@ import com.best11.gamelog.user.entity.User;
 import com.best11.gamelog.user.jwt.JwtUtil;
 import com.best11.gamelog.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,12 +40,12 @@ public class UserService {
         }
 
         // 비밀번호 확인 일치 체크
-        if(!passwordEncoder.matches(passwordCheck, password)){
+        if (!passwordEncoder.matches(passwordCheck, password)) {
             throw new RuntimeException("비밀번호를 체크해주세요");
         }
 
         // username 중복 체크
-        if (userRepository.findByUsername(username).isPresent()){
+        if (userRepository.findByUsername(username).isPresent()) {
             throw new IllegalArgumentException("이미 존재하는 username 입니다.");
         }
 
@@ -60,7 +61,7 @@ public class UserService {
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("등록된 유저가 없습니다."));
         // 비밀번호 확인
-        if(!passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
     }
@@ -74,4 +75,34 @@ public class UserService {
                 .map(PostResponseDto::new)
                .collect(Collectors.toList());
     }
+
+    public void updateUsername(UserRequestDto requestDto, User user) {
+        user.setUsername(requestDto.getUsername());
+
+        userRepository.save(user);
+    }
+    public void updateDescription(UserRequestDto requestDto, User user) {
+        // 한줄 소개 변경
+        user.setDescription(requestDto.getDescription());
+        // 저장
+        userRepository.save(user);
+    }
+
+
+    public void updatePassword(PasswordRequestDto requestDto, User user) {
+        String changePassword = passwordEncoder.encode(requestDto.getChangePassword()); // 바꿀 비밀번호 암호화
+        // 비밀번호 변경 시 기존 비밀번호 확인
+        if (!passwordEncoder.matches(requestDto.getCurrentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+        // 비밀번호 한번 더 입력해주세요 일치 확인
+        if (!passwordEncoder.matches(requestDto.getChangePasswordCheck(), changePassword)) {
+            throw new IllegalArgumentException("변경할 비밀번호를 체크해주세요");
+        }
+        // 변경된 비밀번호로 set
+        user.setPassword(changePassword);
+        // 저장
+        userRepository.save(user);
+    }
+
 }
